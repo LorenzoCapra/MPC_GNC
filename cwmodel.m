@@ -28,4 +28,6 @@ Bd  = [0, 0, 0;
 
 % D = 0 ;
 
+d = [randn(1); randn(1); randn(1)] * 1e-3;
+
 xdot = A*x+Bu*u+Bd*d;

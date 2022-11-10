@@ -14,9 +14,13 @@ param.n = sqrt(param.mu/(param.R^3)) ;  % Mean orbital motion
 % Sampling time
 Ts = 1 ; % [s]
 
+% Initial conditions:
+ic = [-0.1 + 0.2 * randn(1); -0.1 + 0.2 * randn(1); -0.1 + 0.2 * randn(1); ...
+    -0.01*1e-3 + 0.02*1e-3 * randn(1); -0.01*1e-3 + 0.02*1e-3 * randn(1); -0.01*1e-3 + 0.02*1e-3 * randn(1)] ;
+
 %% Open loop simulation
 Nsim            =   50 ;
-x0              =   zeros(6, 1) + [0.01; -0.1; 0.2; 0.1*1e-3; -0.02*1e-3; 0.001*1e-3] ;
+x0              =   zeros(6, 1) + ic ; %[0.01; -0.1; 0.2; 0.1*1e-3; -0.02*1e-3; 0.001*1e-3] ;
 u               =   [1e-3; 0; 0] ;
 d               =   [0; 0; 0] ;
 
@@ -65,7 +69,7 @@ sys_d           =   c2d(system,Ts,'tustin');
 [Ad,Bd,Cd,Dd]   =   ssdata(sys_d);
 
 %% Finite Horizon Optimal Control Problem
-x0          =   zeros(6, 1) + [0.01; -0.1; 0.2; 0.1*1e-3; -0.02*1e-3; 0.001*1e-3] ;
+x0          =   zeros(6, 1) + ic ; %[0.01; -0.1; 0.2; 0.1*1e-3; -0.02*1e-3; 0.001*1e-3] ;
 N           =   60 ;
 Q           =   1 ;
 R           =   1e-5 ;
@@ -107,7 +111,7 @@ figure(3),subplot(2,1,1),plot(tsim,ustar*ones(3,Nsim)),grid on, hold on, title('
 %% MPC (Close loop simulation w. receding horizon)
 Nsim            =   N;
 N_MPC           =   50;
-x0              =   zeros(6,1) + [0.01; -0.1; 0.2; 0.1*1e-3; -0.02*1e-3; 0.001*1e-3];
+x0              =   zeros(6,1) + ic ; %[0.01; -0.1; 0.2; 0.1*1e-3; -0.02*1e-3; 0.001*1e-3];
 d               =   [1e-4; -2.3e-5; 7e-6];
 
 xMPC            =   zeros(6,Nsim);
