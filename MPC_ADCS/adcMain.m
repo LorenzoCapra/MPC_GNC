@@ -141,7 +141,18 @@ ustar       =   [zeros(N,3);zeros(1,3)];
 x_ref       =   zeros(size(x_r,1)+1,N) ;
 x_ref(:,1)  =   [x_ref_quat; x_r(4:6)] ;
 
+f = waitbar(0,'1','Name','Running MPC...',...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(f,'canceling',0);
+
 for ind_sim=2:Nsim
+    % Check for clicked Cancel button
+    if getappdata(f,'canceling')
+        break
+    end
+    % Update waitbar and message
+    waitbar(ind_sim/Nsim,f,sprintf('%12.9f',ind_sim))
+
     ustar               =   fmincon(@(u)adc_cost_fun(xMPC(:,ind_sim-1),u,d,N_MPC,Q,R,x_ref(:,ind_sim-1),Ts,param),[ustar(2:end,:);ustar(end,:)],...
                                     [],[],[],[],[],[],@(u)adc_constr_fun(xMPC(:,ind_sim-1),u,d,N_MPC,umax,Ts,param),options);
     u                   =   ustar(1,:)';
@@ -152,7 +163,9 @@ for ind_sim=2:Nsim
     x_ref(:,ind_sim)    =   [x_ref_quat; x_r(4:6)] ;
     uMPC(ind_sim-1,:)   =   u;
 end
-%%
+
+delete(f)
+
 % Plot quaternion evolution with MPC
 figure(1),subplot(5,1,1),plot(tsim,xMPC(1,:)),grid on, hold on, title('q1')
 figure(1),subplot(5,1,2),plot(tsim,xMPC(2,:)),grid on, hold on, title('q2')
