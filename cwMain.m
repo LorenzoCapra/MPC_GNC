@@ -145,3 +145,9 @@ figure(2),subplot(3,1,3),plot(tsim,xsim(3,:)),grid on, hold on, title('Z [km]')
 
 %% Comparison between FHOCP and MPC control effort
 figure(3),subplot(2,1,2),plot(tsim,uMPC*ones(3,Nsim)),grid on, hold on, title('Input acceleration [m/s^2] with MPC')
+
+%% Resulting trajectory with MPC
+figure, plot3(xMPC(1,:), xMPC(2,:), xMPC(3,:), 'r', 'LineWidth', 1.5), grid on, hold on
+scatter3(0, 0, 0, 'k', 'filled')
+title('MPC rendezvous trajectory'), xlabel('x [km]'), ylabel('y [km]'), zlabel('z [km]')
+legend('Trajectory', 'Target')
