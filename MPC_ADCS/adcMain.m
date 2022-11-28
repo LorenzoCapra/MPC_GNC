@@ -82,7 +82,7 @@ ustar   = fmincon(@(u)adc_cost_fun(x0,u,d,N,Q,R,x_ref(:,1),Ts,param),zeros(N,3),
 
 %% Open loop simulation - FHOCP solution
 Nsim            =   N;
-%d               =   [0; 0; 0];
+%d              =   [0; 0; 0];
 
 xsim            =   zeros(size(x0,1),Nsim);
 xsim(:,1)       =   x0;

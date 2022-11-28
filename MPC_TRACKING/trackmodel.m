@@ -1,4 +1,4 @@
-function [xdot] = cwmodel(t,x,u,d,param)
+function [xdot] = trackmodel(t,x,u,d,param)
 
 n = param.n ;
 
@@ -28,6 +28,6 @@ Bd  = [0, 0, 0;
 
 % D = 0 ;
 
-d = [randn(1); randn(1); randn(1)] * 1e-3;
+% d = [randn(1); randn(1); randn(1)] * 1e-4;
 
 xdot = A*x+Bu*u+Bd*d;

@@ -1,4 +1,4 @@
-function [Constr,Constr_eq,xpred]=cw_constr_fun(x0,upred,N,Ad,Bd,umax)
+function [Constr,Constr_eq,xpred]=track_constr_fun(x0,upred,N,Ad,Bd,umax)
 
 Constr_eq                                 =   [];
 Constr                                    =   zeros(2*size(upred,1)+2*N+1,3); % Input constraints;State constraints
