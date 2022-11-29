@@ -72,6 +72,8 @@ title('Relative Motion Chaser-Target')
 xlabel('x [km]'), ylabel('y [km]'), zlabel('z [km]')
 figure(4),scatter3(0,0,0, 'filled'),grid on
 
+close all
+
 %% Finite Horizon Optimal Control Problem
 x0          =   ic ;
 N           =   40 ;
@@ -229,6 +231,20 @@ figure(11),subplot(3,1,3),plot(tsim,xsim(9,:),'k'),grid on, hold on, title('alfa
 figure(11),subplot(3,1,1),plot(tsim,x_ref(7,1:end-N_MPC),'r--'),grid on, hold on, title('alfa-x [rad]')
 figure(11),subplot(3,1,2),plot(tsim,x_ref(8,1:end-N_MPC),'r--'),grid on, hold on, title('alfa-y [rad]')
 figure(11),subplot(3,1,3),plot(tsim,x_ref(9,1:end-N_MPC),'r--'),grid on, hold on, title('alfa-z [rad]')
+
+legend('MPC','FHOCP','REF')
+
+figure(100),subplot(3,1,1),plot(tsim,xMPC(11,:),'b'),grid on, hold on, title('w-x [rad/s]')
+figure(100),subplot(3,1,2),plot(tsim,xMPC(12,:),'b'),grid on, hold on, title('w-y [rad/s]')
+figure(100),subplot(3,1,3),plot(tsim,xMPC(13,:),'b'),grid on, hold on, title('w-z [rad/s]')
+
+figure(100),subplot(3,1,1),plot(tsim,xsim(11,:),'k'),grid on, hold on, title('w-x [rad/s]')
+figure(100),subplot(3,1,2),plot(tsim,xsim(12,:),'k'),grid on, hold on, title('w-y [rad(s]')
+figure(100),subplot(3,1,3),plot(tsim,xsim(13,:),'k'),grid on, hold on, title('w-z [rad/s]')
+
+figure(100),subplot(3,1,1),plot(tsim,x_ref(11,1:end-N_MPC),'r--'),grid on, hold on, title('w-x [rad/s]')
+figure(100),subplot(3,1,2),plot(tsim,x_ref(12,1:end-N_MPC),'r--'),grid on, hold on, title('w-y [rad/s]')
+figure(100),subplot(3,1,3),plot(tsim,x_ref(13,1:end-N_MPC),'r--'),grid on, hold on, title('w-z [rad/s]')
 
 legend('MPC','FHOCP','REF')
 
