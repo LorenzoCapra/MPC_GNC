@@ -38,12 +38,12 @@ w_chaser    =   [0; 0; 0];
 ic          =   [r0; v0; q0; w_chaser] ;
 
 %% Open loop simulation
-Nsim            =   30 ;
+Nsim            =   100 ;
 x0              =   ic ;
 u               =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3);
                      normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
-d               =   [normrnd(0, 1e-4); normrnd(0, 1e-4); normrnd(0, 1e-4);
-                     normrnd(0, 1e-4); normrnd(0, 1e-4); normrnd(0, 1e-4)];
+d               =   [normrnd(0, 1e-5); normrnd(0, 1e-5); normrnd(0, 1e-5);
+                     normrnd(0, 1e-5); normrnd(0, 1e-5); normrnd(0, 1e-5)];
 
 xsim            =   zeros(size(ic,1), Nsim) ;
 xsim(:,1)       =   x0 ;
@@ -76,11 +76,14 @@ close all
 
 %% Finite Horizon Optimal Control Problem
 x0          =   ic ;
-N           =   40 ;
-Q           =   1 ;
+N           =   110 ;
+Qpos        =   1 ;
+Qatt        =   1;
+Q           =   [eye(6)*Qpos, zeros(6,7);
+                 zeros(7,6), eye(7)*Qatt];
 R           =   1e-5 ;
 umax        =   [1e-2 1e-2 1e-2 1e-2 1e-2 1e-2] ;
-d           =   [0;0;0;0;0;0];
+% d           =   [0;0;0;0;0;0];
 
 % ---------- Reference trajectory (or point) --------------------------------------------------------- %
 N_MPC       =   10;
@@ -132,7 +135,7 @@ ustar   = fmincon(@(u)fulltrack_cost_fun(x0,u,d,N,Q,R,x_ref,1,Ts,param),zeros(N,
 
 %% Open loop simulation - FHOCP solution
 Nsim            =   N;
-d               =   [0;0;0;0;0;0];
+% d               =   [0;0;0;0;0;0];
 
 xsim            =   zeros(size(ic,1),Nsim);
 xsim(:,1)       =   x0;
@@ -180,6 +183,8 @@ figure(9),subplot(3,1,1),plot(tsim,x_ref(10,1:end-N_MPC),'r--'),grid on, hold on
 figure(9),subplot(3,1,2),plot(tsim,x_ref(11,1:end-N_MPC),'r--'),grid on, hold on
 figure(9),subplot(3,1,3),plot(tsim,x_ref(12,1:end-N_MPC),'r--'),grid on, hold on
 
+close all
+
 % Plot control effort
 figure(666),subplot(3,1,1),plot(tsim,ustar(:,1)),grid on, hold on,
 figure(666),subplot(3,1,2),plot(tsim,ustar(:,2)),grid on, hold on,
@@ -188,7 +193,7 @@ figure(666),subplot(3,1,3),plot(tsim,ustar(:,3)),grid on, hold on
 %% MPC (Close loop simulation w. receding horizon)
 Nsim            =   N;
 x0              =   ic ;
-d               =   [0;0;0;0;0;0];
+% d               =   [0;0;0;0;0;0];
 
 xMPC            =   zeros(size(ic,1),Nsim);
 uMPC            =   zeros(Nsim,6);
@@ -206,7 +211,7 @@ for ind_sim=2:Nsim
         break
     end
     % Update waitbar and message
-    waitbar(ind_sim/Nsim,f,sprintf('%12.9f',ind_sim))
+    waitbar(ind_sim/Nsim,f,sprintf('%12.9f',round(ind_sim)))
 
     ustar               =   fmincon(@(u)fulltrack_cost_fun(xMPC(:,ind_sim-1),u,d,N_MPC,Q,R,x_ref,ind_sim,Ts,param),[ustar(2:end,:);ustar(end,:)],...
                             [],[],[],[],[],[],@(u)fulltrack_constr_fun(xMPC(:,ind_sim-1),u,d,N,umax,Ts,param),options);
@@ -216,7 +221,9 @@ for ind_sim=2:Nsim
     uMPC(ind_sim-1,:)   =   u;
 end
 
-delete(f)
+% Cancel the waitbar when operations finished
+F = findall(0,'type','figure','tag','TMWWaitbar');
+delete(F)
 
 %% Comparison between FHOCP and MPC trajectories
 figure(10),subplot(3,1,1),plot(tsim,xMPC(1,:),'b'),grid on, hold on, title('x [km]')
@@ -278,38 +285,62 @@ axis equal
 error_x         = xMPC(1,:) - x_ref(1,1:end-N_MPC);
 error_y         = xMPC(2,:) - x_ref(2,1:end-N_MPC);
 error_z         = xMPC(3,:) - x_ref(3,1:end-N_MPC);
-error_anglex    = xMPC(7,:) - x_ref(7,1:end-N_MPC);
-error_angley    = xMPC(8,:) - x_ref(8,1:end-N_MPC);
-error_anglez    = xMPC(9,:) - x_ref(9,1:end-N_MPC);
+error_q1        = xMPC(7,:) - x_ref(7,1:end-N_MPC);
+error_q2        = xMPC(8,:) - x_ref(8,1:end-N_MPC);
+error_q3        = xMPC(9,:) - x_ref(9,1:end-N_MPC);
+error_q4        = xMPC(10,:) - x_ref(10,1:end-N_MPC);
+error_wx        = xMPC(11,:) - x_ref(11,1:end-N_MPC);
+error_wy        = xMPC(12,:) - x_ref(12,1:end-N_MPC);
+error_wz        = xMPC(13,:) - x_ref(13,1:end-N_MPC);
 
-e_x         = xsim(1,:) - x_ref(1,1:end-N_MPC);
-e_y         = xsim(2,:) - x_ref(2,1:end-N_MPC);
-e_z         = xsim(3,:) - x_ref(3,1:end-N_MPC);
-e_anglex    = xsim(7,:) - x_ref(7,1:end-N_MPC);
-e_angley    = xsim(8,:) - x_ref(8,1:end-N_MPC);
-e_anglez    = xsim(9,:) - x_ref(9,1:end-N_MPC);
+e_x             = xsim(1,:) - x_ref(1,1:end-N_MPC);
+e_y             = xsim(2,:) - x_ref(2,1:end-N_MPC);
+e_z             = xsim(3,:) - x_ref(3,1:end-N_MPC);
+e_q1            = xsim(7,:) - x_ref(7,1:end-N_MPC);
+e_q2            = xsim(8,:) - x_ref(8,1:end-N_MPC);
+e_q3            = xsim(9,:) - x_ref(9,1:end-N_MPC);
+e_q4            = xsim(10,:) - x_ref(10,1:end-N_MPC);
+e_wx            = xsim(11,:) - x_ref(11,1:end-N_MPC);
+e_wy            = xsim(12,:) - x_ref(12,1:end-N_MPC);
+e_wz            = xsim(13,:) - x_ref(13,1:end-N_MPC);
 
-figure(14),subplot(3,1,1),plot(tsim,error_x,'b','LineWidth', 1.5),grid on,title('Position error (MPC)')
-figure(14),subplot(3,1,2),plot(tsim,error_y,'r','LineWidth', 1.5),grid on
-figure(14),subplot(3,1,3),plot(tsim,error_z,'g','LineWidth', 1.5),grid on
+figure(12),subplot(3,1,1),plot(tsim,error_x,'b'),grid on,hold on,title('Position error (MPC vs FHOCP)')
+figure(12),subplot(3,1,2),plot(tsim,error_y,'r'),grid on,hold on
+figure(12),subplot(3,1,3),plot(tsim,error_z,'g'),grid on,hold on
 
-figure(15),subplot(3,1,1),plot(tsim,error_anglex,'b','LineWidth', 1.5),grid on,title('Angle error (MPC)')
-figure(15),subplot(3,1,2),plot(tsim,error_angley,'r','LineWidth', 1.5),grid on
-figure(15),subplot(3,1,3),plot(tsim,error_anglez,'g','LineWidth', 1.5),grid on
+figure(12),subplot(3,1,1),plot(tsim,e_x,'k--'),grid on,hold on
+figure(12),subplot(3,1,2),plot(tsim,e_y,'k--'),grid on,hold on
+figure(12),subplot(3,1,3),plot(tsim,e_z,'k--'),grid on,hold on
+
+figure(14),subplot(4,1,1),plot(tsim,error_q1,'b'),grid on,hold on,title('Quaternion error (MPC vs FHOCP)')
+figure(14),subplot(4,1,2),plot(tsim,error_q2,'r'),grid on,hold on
+figure(14),subplot(4,1,3),plot(tsim,error_q3,'g'),grid on,hold on
+figure(14),subplot(4,1,4),plot(tsim,error_q4,'m'),grid on,hold on
+
+figure(14),subplot(4,1,1),plot(tsim,e_q1,'k--'),grid on,hold on
+figure(14),subplot(4,1,2),plot(tsim,e_q2,'k--'),grid on,hold on
+figure(14),subplot(4,1,3),plot(tsim,e_q3,'k--'),grid on,hold on
+figure(14),subplot(4,1,4),plot(tsim,e_q4,'k--'),grid on,hold on
 
 error_MPC   = [error_x', error_y', error_z'];
 error_FHOCP = [e_x', e_y', e_z'];
-error_angleMPC   = [error_anglex', error_angley', error_anglez'];
-error_angleFHOCP = [e_anglex', e_angley', e_anglez'];
-norm_err = zeros(N,4);
+error_angleMPC   = [error_q1', error_q2', error_q3', error_q4'];
+error_angleFHOCP = [e_q1', e_q2', e_q3', e_q4'];
+error_wMPC   = [error_wx', error_wy', error_wz'];
+error_wFHOCP = [e_wx', e_wy', e_wz'];
+norm_err = zeros(N,6);
 for i = 1:N
     norm_err(i,1) = norm(error_MPC(i,:));
     norm_err(i,2) = norm(error_FHOCP(i,:));
     norm_err(i,3) = norm(error_angleMPC(i,:));
     norm_err(i,4) = norm(error_angleFHOCP(i,:));
+    norm_err(i,5) = norm(error_wMPC(i,:));
+    norm_err(i,6) = norm(error_wFHOCP(i,:));
 end
 
-figure(16),subplot(2,1,1),plot(tsim,norm_err(:,1),'r','LineWidth', 1.5),grid on,title('Norm of the position error (MPC)')
-figure(16),subplot(2,1,2),plot(tsim,norm_err(:,2),'b','LineWidth', 1.5),grid on,title('Norm of the position error (FHOCP)')
-figure(17),subplot(2,1,1),plot(tsim,norm_err(:,3),'r','LineWidth', 1.5),grid on,title('Norm of the angle error (MPC)')
-figure(17),subplot(2,1,2),plot(tsim,norm_err(:,4),'b','LineWidth', 1.5),grid on,title('Norm of the angle error (FHOCP)')
+figure(16),subplot(3,1,1),plot(tsim,norm_err(:,1),'r'),grid on,hold on,title('Norm of the position error (MPC vs FHOCP')
+figure(16),subplot(3,1,1),plot(tsim,norm_err(:,2),'k--'),grid on,hold on
+figure(16),subplot(3,1,2),plot(tsim,norm_err(:,3),'r'),grid on,hold on,title('Norm of the quaternion error (MPC vs FHOCP)')
+figure(16),subplot(3,1,2),plot(tsim,norm_err(:,4),'k--'),grid on,hold on
+figure(16),subplot(3,1,3),plot(tsim,norm_err(:,5),'r'),grid on,hold on,title('Norm of the angular velocity error (MPC vs FHOCP)')
+figure(16),subplot(3,1,3),plot(tsim,norm_err(:,6),'k--'),grid on,hold on
