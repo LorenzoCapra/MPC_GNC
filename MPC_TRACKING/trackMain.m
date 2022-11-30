@@ -37,10 +37,9 @@ for ind_sim=2:Nsim
     xsim(:,ind_sim)  = xout(end,:)' ;
 end
 
-figure(1),subplot(4,1,1),plot(tsim,xsim(1,:)),grid on, hold on, title('x [km]')
-figure(1),subplot(4,1,2),plot(tsim,xsim(2,:)),grid on, hold on, title('y [km]')
-figure(1),subplot(4,1,3),plot(tsim,xsim(3,:)),grid on, hold on, title('z [km]')
-figure(1),subplot(4,1,4),plot(tsim,u*ones(1,Nsim)),grid on, hold on, title('Input acceleration [km/s^2]')
+figure(1),subplot(3,1,1),plot(tsim,xsim(1,:)),grid on, hold on, title('x [km]')
+figure(1),subplot(3,1,2),plot(tsim,xsim(2,:)),grid on, hold on, title('y [km]')
+figure(1),subplot(3,1,3),plot(tsim,xsim(3,:)),grid on, hold on, title('z [km]')
 
 figure(2),plot3(xsim(1,:),xsim(2,:),xsim(3,:),'LineWidth',1.5),grid on,hold on,
 title('Relative Motion Chaser-Target')
