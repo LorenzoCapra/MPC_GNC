@@ -1,7 +1,7 @@
 function [xdot] = fulltrackmodel(t,x,u,d,param)
 
-d = [normrnd(0, 1e-4); normrnd(0, 1e-4); normrnd(0, 1e-4);
-     normrnd(0, 1e-4); normrnd(0, 1e-4); normrnd(0, 1e-4)];
+% d = [normrnd(0, 1e-4); normrnd(0, 1e-4); normrnd(0, 1e-4);
+%      normrnd(0, 1e-4); normrnd(0, 1e-4); normrnd(0, 1e-4)];
 
 n = param.n ;
 Ic  = param.chaser_inertia ;

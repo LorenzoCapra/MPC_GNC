@@ -10,7 +10,10 @@ ypred(:,1)  =   x0;
 slack       =   upred(end,1);
 
 % State and output predictions
-J           =   (ypred(:,1)-x_ref(:,ind_sim))'*Q*(ypred(:,1)-x_ref(:,ind_sim));
+if ind_sim == 1
+    ind_sim = ind_sim + 1;
+end
+J           =   (ypred(:,1)-x_ref(:,ind_sim-1))'*Q*(ypred(:,1)-x_ref(:,ind_sim-1));
 
 for ind_pred = 2:N
     u                   =   upred(ind_pred-1,:);

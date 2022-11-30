@@ -196,7 +196,18 @@ xMPC(:,1)       =   x0;
 tsim            =   0:Ts:(Nsim-1)*Ts;
 ustar           =   [zeros(N,6);zeros(1,6)];
 
+f = waitbar(0,'1','Name','Running MPC...',...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(f,'canceling',0);
+
 for ind_sim=2:Nsim
+    % Check for clicked Cancel button
+    if getappdata(f,'canceling')
+        break
+    end
+    % Update waitbar and message
+    waitbar(ind_sim/Nsim,f,sprintf('%12.9f',ind_sim))
+
     ustar               =   fmincon(@(u)fulltrack_cost_fun(xMPC(:,ind_sim-1),u,d,N_MPC,Q,R,x_ref,ind_sim,Ts,param),[ustar(2:end,:);ustar(end,:)],...
                             [],[],[],[],[],[],@(u)fulltrack_constr_fun(xMPC(:,ind_sim-1),u,d,N,umax,Ts,param),options);
     u                   =   ustar(1,:)';
@@ -204,6 +215,8 @@ for ind_sim=2:Nsim
     xMPC(:,ind_sim)     =   xout(end,:)';
     uMPC(ind_sim-1,:)   =   u;
 end
+
+delete(f)
 
 %% Comparison between FHOCP and MPC trajectories
 figure(10),subplot(3,1,1),plot(tsim,xMPC(1,:),'b'),grid on, hold on, title('x [km]')
