@@ -24,9 +24,9 @@ param.wmax = 0.1 ;                      % Max angualar velocity [rad/s]
 Ts = 1 ; % [s]
 
 % Initial conditions:
-alfa        =   [0; 0; 0];
+qt          =   [0; 0; 0; 1];
 w_target    =   [0.0; 0.0; 0.05];
-target_ic   =   [alfa; w_target];
+target_ic   =   [qt; w_target];
 
 r_mag0      =   0.003;
 r0          =   [r_mag0; 0; 0];
@@ -87,7 +87,7 @@ umax        =   [1e-2 1e-2 1e-2 1e-2 1e-2 1e-2] ;
 
 % ---------- Reference trajectory (or point) --------------------------------------------------------- %
 N_MPC       =   10;
-x_r         =   zeros(12,N+N_MPC);
+x_ref       =   zeros(size(ic,1),N+N_MPC);
 
 % Reference position/velocity
 phi         =   linspace(0,w_target(3)*N,N+N_MPC);
@@ -98,32 +98,22 @@ for i = 1:N+N_MPC
     r_ref(:,i)      = [r_mag0 * cos(phi(i)),r_mag0 * sin(phi(i)), 0];
     v_ref(:,i)      = cross(w_target,r_ref(:,i));
     
-    x_r(1:6,i)      = [r_ref(:,i); v_ref(:,i)];
+    x_ref(1:6,i)    = [r_ref(:,i); v_ref(:,i)];
 end
 
 % Reference attitude/angular velocity
 Tt              = 0:Ts:Ts*(N-1+N_MPC);
 [~,xtout]       = ode45(@(t,x)targetode(t,x,param),Tt,target_ic);
-att_ref         = xtout';
+x_ref(7:end,:)  = xtout';
 
-x_r(7:end,:)  = att_ref(1:6,:);
+figure(5),subplot(2,1,1),plot3(r_ref(1,:),r_ref(2,:),r_ref(3,:)),grid on,hold on,title('Reference trajectory')
+figure(5),subplot(2,1,1),scatter3(0,0,0,'filled')
+figure(5),subplot(2,1,2),plot3(v_ref(1,:),v_ref(2,:),v_ref(3,:)),grid on,title('Reference velocity')
 
-figure(5),subplot(4,1,1),plot3(r_ref(1,:),r_ref(2,:),r_ref(3,:)),grid on,hold on,title('Reference trajectory')
-figure(5),subplot(4,1,1),scatter3(0,0,0,'filled')
-figure(5),subplot(4,1,2),plot3(v_ref(1,:),v_ref(2,:),v_ref(3,:)),grid on,title('Reference velocity')
-figure(5),subplot(4,2,1),plot(Tt,att_ref(1,:)),grid on,title('Reference Angles')
-figure(5),subplot(4,2,1),plot(Tt,att_ref(2,:)),grid on,title('Reference Angles')
-figure(5),subplot(4,2,1),plot(Tt,att_ref(3,:)),grid on,title('Reference Angles')
-figure(5),subplot(4,2,2),plot(Tt,att_ref(4,:)),grid on,title('Reference Angular Velocity')
-figure(5),subplot(4,2,2),plot(Tt,att_ref(5,:)),grid on,title('Reference Angular Velocity')
-figure(5),subplot(4,2,2),plot(Tt,att_ref(6,:)),grid on,title('Reference Angular Velocity')
-
-% Transform euler angles to quaternion
-x_ref         =   zeros(13,N+N_MPC);
-for i = 1:N+N_MPC
-    x_ref_quat  =   DCM_quat(Angles321_DCM(att_ref(1:3,i))) ;
-    x_ref(:,i)  =   [x_r(1:6,i); x_ref_quat; x_r(10:12,i)];
-end
+figure(17),subplot(4,1,1),plot(Tt,x_ref(7,:)),grid on,hold on,title('Q1 reference')
+figure(17),subplot(4,1,2),plot(Tt,x_ref(8,:)),grid on,hold on,title('Q2 reference')
+figure(17),subplot(4,1,3),plot(Tt,x_ref(9,:)),grid on,hold on,title('Q3 reference')
+figure(17),subplot(4,1,4),plot(Tt,x_ref(10,:)),grid on,hold on,title('Q4 reference')
 
 % ---------------------------------------------------------------------------------------------------- %
 
