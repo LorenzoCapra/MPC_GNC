@@ -27,4 +27,4 @@ dom_z = ((itx - ity) / itz) * wt(2) * wt(1);
 dom = [dom_x; dom_y; dom_z] ;
 
 %% Return state derivative
-xdot = [qt_dot;dom];
+xdot = [qt_dot; dom];
