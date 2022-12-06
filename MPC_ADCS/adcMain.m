@@ -31,6 +31,34 @@ w_chaser    =   [0; 0; 0];
 
 ic          =   [q0; w_chaser] ;
 
+%% ---------- Reference trajectory (or point) for the end effector ----------------------------%
+% N = 120;
+% 
+% % Reference position/velocity
+% phi         =   linspace(0,w_target(3)*N,N);
+% % r_mag       =   linspace(1, 0.05, N);
+% r_mag       =   0.5;
+% r_ref       =   zeros(3,N);
+% for i = 1:N
+%     r_ref(:,i) = [r_mag * cos(phi(i)), r_mag * sin(phi(i)), 0];
+% end
+% 
+% % Reference attitude/angular velocity
+% Tt              = 0:1:N;
+% [~,xtout]       = ode45(@(t,x)targetode(t,x,param),Tt,target_ic);
+% xr              = xtout';
+% 
+% ee_reference = [2.5, 0.6, 2.9, 3, 0, 2.5] ;
+% 
+% for i =1:N
+%     r_ref(:,i) = ee_reference(4:6)' - r_ref(:,i);
+% end
+% 
+% figure(5),subplot(1,1,1),plot3(r_ref(1,:),r_ref(2,:),r_ref(3,:)),grid on,hold on,title('Reference trajectory')
+% figure(5),subplot(1,1,1),scatter3(0,0,0,'filled')
+% axis equal
+
+
 %% Open loop simulation
 Nsim        =   30 ;
 

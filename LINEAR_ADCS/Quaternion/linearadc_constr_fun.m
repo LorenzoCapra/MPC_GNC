@@ -1,4 +1,4 @@
-function [Constr,Constr_eq,xpred]=linearadc_constr_fun(x0,upred,N,umax,param,A,B)
+function [Constr,Constr_eq,xpred]=linearadc_constr_fun(x0,upred,d,N,umax,param)
 
 wmax = param.wmax;
 
@@ -18,8 +18,9 @@ Constr(size(upred,1)+1:2*size(upred,1),4:6) =   (-xpred(1:3,:)-wmax)';
 % State and output predictions
 
 for ind_pred = 2:N+1
-    u                   =   upred(ind_pred-1,:);
-    xpred(:,ind_pred)   =   A*xpred(:,ind_pred-1)+B*u';
+    u                   =   upred(ind_pred-1,:)';
+    xn                  =   linearAdcsModel(xpred(:,ind_pred-1),u,d,param);
+    xpred(:,ind_pred)   =   xn ;
 end
 
 Constr(end,1)   =   -slack;
