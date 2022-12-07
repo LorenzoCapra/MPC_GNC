@@ -1,30 +1,19 @@
-function [xdot] = targetode(t,x,param)
+function xn = targetode(x,u,param)
 
-It  = param.target_inertia ;
+Ts = param.Ts;
+Jinv = param.Jinv;
+J = param.chaser_inertia;
 
-qt      =   x(1:4);
-wt      =   x(5:7);
+o = x(4:6);
+w = x(1:3);
 
-%% Rotation
-% Normalize quaternion vector
-qt = qt/norm(qt) ;
+So = SkewSymmetric(o);
+Sw = SkewSymmetric(w);
 
-% Build skewsymmetric matric of wc
-OM = [0, wt(3), -wt(2), wt(1);
-      -wt(3), 0, wt(1), wt(2);
-      wt(2), -wt(1), 0, wt(3);
-      -wt(1), -wt(2), -wt(3), 0] ;
+G = 0.5*(eye(3) + o*o' - So - (1+o'*o)*eye(3)/2);
 
-% Integrate Euler equations for the chaser in body frame
-qt_dot = 0.5 * OM * qt ;
+odot = G*w;
+wdot = Jinv*Sw*J*w + Jinv*u;
 
-itx = It(1, 1) ; ity = It(2, 2) ; itz = It(3, 3) ;
-
-dom_x = ((ity - itz) / itx) * wt(2) * wt(3);
-dom_y = ((itz - itx) / ity) * wt(1) * wt(3);
-dom_z = ((itx - ity) / itz) * wt(2) * wt(1);
-
-dom = [dom_x; dom_y; dom_z] ;
-
-%% Return state derivative
-xdot = [qt_dot; dom];
+xn(1:3) = w + wdot*Ts;
+xn(4:6) = o + odot*Ts;

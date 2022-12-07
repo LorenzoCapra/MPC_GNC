@@ -17,7 +17,7 @@ J           =   (ypred(:,1)-x_ref(:,ind_sim-1))'*Q*(ypred(:,1)-x_ref(:,ind_sim-1
 
 for ind_pred = 2:N
     u                   =   upred(ind_pred-1,:)';
-    xn                  =   linearAdcsModel(xpred(:,ind_pred-1),u,d,param);
+    xn                  =   targetode(xpred(:,ind_pred-1),u,param);
     xpred(:,ind_pred)   =   xn;
     ypred(:,ind_pred)   =   xpred(:,ind_pred);
 

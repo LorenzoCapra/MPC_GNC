@@ -19,7 +19,7 @@ Constr(size(upred,1)+1:2*size(upred,1),4:6) =   (-xpred(1:3,:)-wmax)';
 
 for ind_pred = 2:N+1
     u                   =   upred(ind_pred-1,:)';
-    xn                  =   linearAdcsModel(xpred(:,ind_pred-1),u,d,param);
+    xn                  =   targetode(xpred(:,ind_pred-1),u,param);
     xpred(:,ind_pred)   =   xn ;
 end
 

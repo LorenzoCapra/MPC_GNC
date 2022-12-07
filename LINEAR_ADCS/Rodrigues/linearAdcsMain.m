@@ -4,7 +4,7 @@ clc
 clear
 close all
 
-% 374 s
+% 473 s
 
 %% Simulation parameters
 param.mu = 398600.0 ;
@@ -74,7 +74,7 @@ target_ic   =   [w_target;qt];
 x_ref         =     zeros(size(ic,1),N+N_MPC);
 x_ref(1:6,1) = target_ic;
 for i =2:N+N_MPC
-    x_ref(1:6,i) = linearAdcsModel(x_ref(1:6, i-1),[0;0;0], [0;0;0], param);
+    x_ref(1:6,i) = targetode(x_ref(1:6, i-1),[0;0;0],param);
 end
 
 % Plot target quaternion evolution
@@ -105,7 +105,7 @@ ustar   = fmincon(@(u)linearadc_cost_fun(x0,u,d,N,Q,R,x_ref,1,param),zeros(N,3),
             
 %% Open loop simulation - FHOCP solution
 Nsim            =   N;
-d               =   [0; 0; 0];
+% d               =   [0; 0; 0];
 
 xsim            =   zeros(size(x0,1),Nsim);
 xsim(:,1)       =   x0;
@@ -114,6 +114,7 @@ tsim            =   0:Ts:(Nsim-1)*Ts;
 
 for ind_sim=2:Nsim
     u                   =   ustar(ind_sim-1,:)';
+    d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
     xn                  =   linearAdcsModel(xsim(:,ind_sim-1),u,d,param);
     xsim(:,ind_sim)     =   xn;
 end
@@ -183,6 +184,7 @@ for ind_sim=2:Nsim
     ustar               =   fmincon(@(u)linearadc_cost_fun(xMPC(:,ind_sim-1),u,d,N_MPC,Q,R,x_ref,ind_sim,param),[ustar(2:end,:);ustar(end,:)],...
                             [],[],[],[],[],[],@(u)linearadc_constr_fun(xMPC(:,ind_sim-1),u,d,N,umax,param),options);
     u                   =   ustar(1,:)';
+    d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
     xn                  =   linearAdcsModel(xMPC(:,ind_sim-1),u,d,param);
     xMPC(:,ind_sim)     =   xn;
     uMPC(ind_sim-1,:)   =   u;
