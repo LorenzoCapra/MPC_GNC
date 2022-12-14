@@ -117,7 +117,7 @@ for ind_sim = 2:Nsim
     % Integrate disturbed dynamic measurements
     uAug = [u; Vd*Vd*randn(6,1); Vn*Vn*randn(6,1)];
 
-    [tout2, xdout]   = ode45(@(t,x)modelDist(t,x,uA,sysNoise), [0 Ts], xdsim(:, ind_sim-1)) ;
+    [tout2, xdout]   = ode45(@(t,x)modelDist(t,x,uAug,sysNoise), [0 Ts], xsim(:, ind_sim-1)) ;
     xdsim(:,ind_sim) = sysNoise.C*xdout(end,:)';
 
     % Estimate the state
