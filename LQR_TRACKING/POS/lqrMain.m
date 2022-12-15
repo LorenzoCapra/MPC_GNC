@@ -75,17 +75,18 @@ sys_d           =   c2d(system,Ts,'tustin');
 [Ad,Bd,Cd,Dd]   =   ssdata(sys_d);
 
 %% ---------- Reference trajectory (or point) ---------- %
+N_MPC       =   40;
 N           =   Nsim;
-x_ref       =   zeros(6,N);
+x_ref       =   zeros(6,N+N_MPC);
 
 w_target    =   [0; 0; 0.05];
 
-phi         =   linspace(0,w_target(3)*N,N);
+phi         =   linspace(0,w_target(3)*(N+N_MPC),N+N_MPC);
 %r_mag       =   linspace(0.01, 0.003, N);
 r_mag0      =   0.003;
 r_ref       =   zeros(3,N);
 v_ref       =   zeros(3,N);
-for i = 1:N
+for i = 1:N+N_MPC
     r_ref(:,i) = [r_mag0 * cos(phi(i)),r_mag0 * sin(phi(i)), 0];
     v_ref(:,i) = cross(w_target,r_ref(:,i));
     
@@ -128,18 +129,18 @@ figure(4),subplot(3,1,1),plot(tsim,xsim(1,:)),grid on, hold on, title('x [km]')
 figure(4),subplot(3,1,2),plot(tsim,xsim(2,:)),grid on, hold on, title('y [km]')
 figure(4),subplot(3,1,3),plot(tsim,xsim(3,:)),grid on, hold on, title('z [km]')
 
-figure(4),subplot(3,1,1),plot(tsim,x_ref(1,:),'r--'),grid on, hold on
-figure(4),subplot(3,1,2),plot(tsim,x_ref(2,:),'r--'),grid on, hold on
-figure(4),subplot(3,1,3),plot(tsim,x_ref(3,:),'r--'),grid on, hold on
+figure(4),subplot(3,1,1),plot(tsim,x_ref(1,1:end-N_MPC),'r--'),grid on, hold on
+figure(4),subplot(3,1,2),plot(tsim,x_ref(2,1:end-N_MPC),'r--'),grid on, hold on
+figure(4),subplot(3,1,3),plot(tsim,x_ref(3,1:end-N_MPC),'r--'),grid on, hold on
 
 % Velocity vs reference
 figure(5),subplot(3,1,1),plot(tsim,xsim(4,:)),grid on, hold on, title('x [km/s]')
 figure(5),subplot(3,1,2),plot(tsim,xsim(5,:)),grid on, hold on, title('y [km/s]')
 figure(5),subplot(3,1,3),plot(tsim,xsim(6,:)),grid on, hold on, title('z [km/s]')
 
-figure(5),subplot(3,1,1),plot(tsim,x_ref(4,:),'r--'),grid on, hold on
-figure(5),subplot(3,1,2),plot(tsim,x_ref(5,:),'r--'),grid on, hold on
-figure(5),subplot(3,1,3),plot(tsim,x_ref(6,:),'r--'),grid on, hold on
+figure(5),subplot(3,1,1),plot(tsim,x_ref(4,1:end-N_MPC),'r--'),grid on, hold on
+figure(5),subplot(3,1,2),plot(tsim,x_ref(5,1:end-N_MPC),'r--'),grid on, hold on
+figure(5),subplot(3,1,3),plot(tsim,x_ref(6,1:end-N_MPC),'r--'),grid on, hold on
 
 % close all
 
@@ -149,7 +150,6 @@ figure(6),subplot(2,1,1),plot(tsim,ulqr(:,3)),grid on, hold on
 
 %% MPC (Close loop simulation w. receding horizon)
 Nsim            =   N;
-N_MPC           =   40;
 x0              =   ic ;
 
 xMPC            =   zeros(6,Nsim);
@@ -162,8 +162,19 @@ umax        =   [1e-2 1e-2 1e-2] ;
 
 options     =   optimset('Display','Iter','MaxFunEvals',1e4,'Algorithm','active-set'); 
 
+f = waitbar(0,'1','Name','Running MPC...',...
+    'CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+setappdata(f,'canceling',0);
+
 for ind_sim=2:Nsim
-    ustar               =   fmincon(@(u)cw_cost_fun(xMPC(:,ind_sim-1),u,N_MPC,Q,R,Ad,Bd,Cd,Dd,x_ref),[ustar(2:end,:);ustar(end,:)],...
+    % Check for clicked Cancel button
+    if getappdata(f,'canceling')
+        break
+    end
+    % Update waitbar and message
+    waitbar(ind_sim/Nsim,f,sprintf('%12.9f',ind_sim))
+
+    ustar               =   fmincon(@(u)cw_cost_fun(xMPC(:,ind_sim-1),u,N_MPC,Q,R,Ad,Bd,Cd,Dd,x_ref,ind_sim),[ustar(2:end,:);ustar(end,:)],...
                             [],[],[],[],[],[],@(u)cw_constr_fun(xMPC(:,ind_sim-1),u,N_MPC,Ad,Bd,umax),options);
     u                   =   ustar(1,:)';
     d                   =   [normrnd(0,1e-3); normrnd(0,1e-3); normrnd(0,1e-3)];
@@ -171,6 +182,8 @@ for ind_sim=2:Nsim
     xMPC(:,ind_sim)     =   xout(end,:)';
     uMPC(ind_sim-1,:)   =   u;
 end
+
+delete(f)
 
 figure(1),subplot(4,1,1),plot(tsim,xMPC(1,:)),grid on, hold on, title('x [km]')
 figure(1),subplot(4,1,2),plot(tsim,xMPC(2,:)),grid on, hold on, title('y [km]')
@@ -185,9 +198,9 @@ figure(7),subplot(3,1,1),plot(tsim,xsim(1,:),'k'),grid on, hold on, title('x [km
 figure(7),subplot(3,1,2),plot(tsim,xsim(2,:),'k'),grid on, hold on, title('y [km]')
 figure(7),subplot(3,1,3),plot(tsim,xsim(3,:),'k'),grid on, hold on, title('z [km]')
 
-figure(7),subplot(3,1,1),plot(x_ref(1,:),'r--'),grid on, hold on, title('x [km]')
-figure(7),subplot(3,1,2),plot(x_ref(2,:),'r--'),grid on, hold on, title('y [km]')
-figure(7),subplot(3,1,3),plot(x_ref(3,:),'r--'),grid on, hold on, title('z [km]')
+figure(7),subplot(3,1,1),plot(x_ref(1,1:end-N_MPC),'r--'),grid on, hold on, title('x [km]')
+figure(7),subplot(3,1,2),plot(x_ref(2,1:end-N_MPC),'r--'),grid on, hold on, title('y [km]')
+figure(7),subplot(3,1,3),plot(x_ref(3,1:end-N_MPC),'r--'),grid on, hold on, title('z [km]')
 
 legend('MPC', 'LQR', 'REF')
 
@@ -208,16 +221,16 @@ axis equal
 
 %% Resulting trajectory with LQR
 figure, plot3(xsim(1,:), xsim(2,:), xsim(3,:), 'k', 'LineWidth', 1.5), grid on, hold on
-plot3(x_ref(1,:),x_ref(2,:),x_ref(3,:),'r--'),grid on
+plot3(x_ref(1,1:end-N_MPC),x_ref(2,1:end-N_MPC),x_ref(3,1:end-N_MPC),'r--'),grid on
 scatter3(0, 0, 0, 'k', 'filled')
 title('LQR fly-around trajectory'), xlabel('x [km]'), ylabel('y [km]'), zlabel('z [km]')
 legend('LQR Trajectory', 'Reference Trajectory', 'Target')
 % axis equal
 
 %% Plot error along the 3-axis
-error_x = xMPC(1,:) - x_ref(1,:);
-error_y = xMPC(2,:) - x_ref(2,:);
-error_z = xMPC(3,:) - x_ref(3,:);
+error_x = xMPC(1,:) - x_ref(1,1:end-N_MPC);
+error_y = xMPC(2,:) - x_ref(2,1:end-N_MPC);
+error_z = xMPC(3,:) - x_ref(3,1:end-N_MPC);
 
 figure,subplot(3,1,1),plot(tsim,error_x,'b','LineWidth', 1.5),grid on
 subplot(3,1,2),plot(tsim,error_y,'r','LineWidth', 1.5),grid on

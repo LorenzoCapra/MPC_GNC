@@ -27,7 +27,7 @@ Ts = 1 ; % [s]
 param.Ts = Ts;
 
 % Initial conditions:
-o0          =   [0; 0; 0];
+o0          =   deg2rad([0; 0; 0]);
 w_chaser    =   [0; 0; 0];
 
 ic          =   [w_chaser;o0] ;
@@ -64,7 +64,7 @@ figure(2),subplot(3,1,3),plot(tsim,xsim(3,:)),grid on, hold on, title('wcz')
 
 %% Reference attitude (qauternion + angular velocity)
 N           =   Nsim+10 ;
-N_MPC       =   10;
+N_MPC       =   50;
 Tt          =   0:Ts:Ts*(N-1+N_MPC);
 
 qt          =   [0; 0; 0];
@@ -87,7 +87,7 @@ figure(4),subplot(3,1,1),plot(Tt,x_ref(1,:)), grid on, hold on, title('wx ref')
 figure(4),subplot(3,1,2),plot(Tt,x_ref(2,:)), grid on, hold on, title('wy ref')
 figure(4),subplot(3,1,3),plot(Tt,x_ref(3,:)), grid on, hold on, title('wz ref')
 
-% close all
+close all
 
 %% Finite Horizon Optimal Control Problem
 x0          =   ic ;
@@ -114,7 +114,7 @@ tsim            =   0:Ts:(Nsim-1)*Ts;
 
 for ind_sim=2:Nsim
     u                   =   ustar(ind_sim-1,:)';
-    d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
+%     d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
     xn                  =   linearAdcsModel(xsim(:,ind_sim-1),u,d,param);
     xsim(:,ind_sim)     =   xn;
 end
@@ -184,7 +184,7 @@ for ind_sim=2:Nsim
     ustar               =   fmincon(@(u)linearadc_cost_fun(xMPC(:,ind_sim-1),u,d,N_MPC,Q,R,x_ref,ind_sim,param),[ustar(2:end,:);ustar(end,:)],...
                             [],[],[],[],[],[],@(u)linearadc_constr_fun(xMPC(:,ind_sim-1),u,d,N,umax,param),options);
     u                   =   ustar(1,:)';
-    d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
+%     d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
     xn                  =   linearAdcsModel(xMPC(:,ind_sim-1),u,d,param);
     xMPC(:,ind_sim)     =   xn;
     uMPC(ind_sim-1,:)   =   u;

@@ -88,9 +88,9 @@ R = [1/(J(1, 1)^2), 0, 0;
      0, 1/(J(2, 2)^2), 0;
      0, 0, 1/(J(3, 3)^2)];
 
-system          =   ss(A,B,C,D);
-sys_d           =   c2d(system,Ts,'tustin');
-[Ad,Bd,Cd,Dd]   =   ssdata(sys_d);
+% system          =   ss(A,B,C,D);
+% sys_d           =   c2d(system,Ts,'tustin');
+% [Ad,Bd,Cd,Dd]   =   ssdata(sys_d);
 
 [K,S,e] = lqr(A,B,Q,R);
 
@@ -131,13 +131,13 @@ ulqr        =   zeros(Nsim,3);
 uMax        =   0.01;
 uMin        =   -0.01;
 
-% d = [0;0;0];
+d           =   [0;0;0] ;
 
 for ind_sim=2:Nsim
     u                   =   - K * (xsim(:,ind_sim-1) - x_ref(:,ind_sim-1));
     u(u>uMax)           =   uMax;
     u(u<uMin)           =   uMin;
-    d                   =   [normrnd(0, 1e-2); normrnd(0, 1e-2); normrnd(0, 1e-2)] ;
+%     d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
     xn                  =   linearAdcsModel(xsim(:,ind_sim-1),u,d,param);
     xsim(:,ind_sim)     =   xn;
     ulqr(ind_sim-1,:)   =   u;
@@ -198,7 +198,7 @@ for ind_sim=2:Nsim
     ustar               =   fmincon(@(u)linearadc_cost_fun(xMPC(:,ind_sim-1),u,d,N_MPC,Q,R,x_ref,ind_sim,param),[ustar(2:end,:);ustar(end,:)],...
                             [],[],[],[],[],[],@(u)linearadc_constr_fun(xMPC(:,ind_sim-1),u,d,N,umax,param),options);
     u                   =   ustar(1,:)';
-    d                   =   [normrnd(0, 1e-2); normrnd(0, 1e-2); normrnd(0, 1e-2)] ;
+%     d                   =   [normrnd(0, 1e-2); normrnd(0, 1e-2); normrnd(0, 1e-2)] ;
     xn                  =   linearAdcsModel(xMPC(:,ind_sim-1),u,d,param);
     xMPC(:,ind_sim)     =   xn;
     uMPC(ind_sim-1,:)   =   u;
