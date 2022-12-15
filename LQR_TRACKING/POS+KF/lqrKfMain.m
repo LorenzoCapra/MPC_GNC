@@ -45,7 +45,7 @@ sys_d           =   c2d(system,Ts,'zoh');
 [Ad,Bd,Cd,Dd]   =   ssdata(sys_d);
 
 %% Open loop simulation for the nominal system
-Nsim            =   1000 ;
+Nsim            =   100 ;
 t               =   0:Ts:Nsim*Ts;
 x0              =   ic ;
 u0              =   [1e-3*sin(t); -1e-3*sin(t); 5e-4*sin(t)] ;
@@ -101,6 +101,8 @@ xdsim           =   zeros(size(ic,1),Nsim);
 xdsim(:,1)      =   x0;
 ysim            =   zeros(size(ic,1),Nsim);
 ysim(:,1)       =   C*x0;
+ydsim           =   zeros(size(ic,1),Nsim);
+ydsim(:,1)      =   C*x0;
 xHatsim         =   zeros(size(ic,1),Nsim);
 xHatsim(:,1)    =   x0;
 P               =   eye(size(ic,1));
@@ -115,13 +117,14 @@ for ind_sim = 2:Nsim
     ysim(:,ind_sim) = system.C * xsim(:,ind_sim);
 
     % Integrate disturbed dynamic measurements
-    uAug = [u; Vd*Vd*randn(6,1); Vn*Vn*randn(6,1)];
+    uAug = [u; randn(6,1); randn(6,1)];  % !!!!
 
     [tout2, xdout]   = ode45(@(t,x)modelDist(t,x,uAug,sysNoise), [0 Ts], xsim(:, ind_sim-1)) ;
     xdsim(:,ind_sim) = sysNoise.C*xdout(end,:)';
+    ydsim(:,ind_sim) = sysNoise.C * xdsim(:,ind_sim);
 
     % Estimate the state
-    [tout3, xkout]   = ode45(@(t,x)modelKalman(t,x,u,ysim(:,ind_sim),sysKf), [0 Ts], xHatsim(:, ind_sim-1)) ;
+    [tout3, xkout]   = ode45(@(t,x)modelKalman(t,x,u,ydsim(:,ind_sim),sysKf), [0 Ts], xHatsim(:, ind_sim-1)) ;
     xHatsim(:,ind_sim)  = xkout(end,:)';
 end
 
