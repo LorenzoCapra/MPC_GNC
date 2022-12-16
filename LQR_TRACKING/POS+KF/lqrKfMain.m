@@ -146,7 +146,7 @@ w_target    =   [0; 0; 0.05];
 
 phi         =   linspace(0,w_target(3)*(N+N_MPC),N+N_MPC);
 %r_mag       =   linspace(0.01, 0.003, N);
-r_mag0      =   0.003;
+r_mag0      =   0.01;
 r_ref       =   zeros(3,N);
 v_ref       =   zeros(3,N);
 for i = 1:N+N_MPC
@@ -166,7 +166,7 @@ figure(4),subplot(2,1,2),plot3(x_ref(4,:),x_ref(5,:),x_ref(6,:)),grid on,title('
 
 %% LQR Control Problem
 Q           =   1 ;
-R           =   1e-5 ;
+R           =   100 ;
 
 K           =   lqr(sys_d,Q,R);
 
@@ -185,8 +185,8 @@ uMax        =   0.01;
 
 for ind_sim=2:Nsim
     u                   = - K * (xHatsim(:,ind_sim-1)-x_ref(:,ind_sim-1));
-    u(u>uMax)           = uMax;
-    u(u<-uMax)          = -uMax;
+%     u(u>uMax)           = uMax;
+%     u(u<-uMax)          = -uMax;
 
     d                   = [normrnd(0,1e-5); normrnd(0,1e-5); normrnd(0,1e-5)];
 
@@ -233,7 +233,7 @@ figure(6),subplot(3,1,1),plot(tsim,x_ref(4,1:end-N_MPC),'r--'),grid on, hold on
 figure(6),subplot(3,1,2),plot(tsim,x_ref(5,1:end-N_MPC),'r--'),grid on, hold on
 figure(6),subplot(3,1,3),plot(tsim,x_ref(6,1:end-N_MPC),'r--'),grid on, hold on
 
-% close all
+close all
 
 figure(7),subplot(2,1,1),plot(tsim,ulqr(:,1)),grid on, hold on, title('Input acceleration [km/s^2] with LQR vs MPC')
 figure(7),subplot(2,1,1),plot(tsim,ulqr(:,2)),grid on, hold on
@@ -242,6 +242,8 @@ figure(7),subplot(2,1,1),plot(tsim,ulqr(:,3)),grid on, hold on
 %% MPC (Close loop simulation w. receding horizon)
 Nsim            =   N;
 x0              =   ic ;
+
+R               =   1e-5;
 
 xMPC            =   zeros(size(ic,1),Nsim);
 uMPC            =   zeros(Nsim,3);
