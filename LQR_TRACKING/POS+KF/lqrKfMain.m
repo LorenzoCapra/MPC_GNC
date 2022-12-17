@@ -297,6 +297,8 @@ for ind_sim=2:Nsim
     uMPC(ind_sim-1,:)   = u;
 end
 
+% Cancel the waitbar when operations finished
+F = findall(0,'type','figure','tag','TMWWaitbar');
 delete(f)
 
 %% Comparison between LQR and MPC trajectories
