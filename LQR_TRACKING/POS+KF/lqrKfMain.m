@@ -15,8 +15,8 @@ param.n = sqrt(param.mu/(param.R^3)) ;  % Mean orbital motion
 Ts = 1 ; % [s]
 
 % Initial conditions:
-ic = [-0.1 + 0.2 * randn(1); -0.1 + 0.2 * randn(1); -0.1 + 0.2 * randn(1); ...
-    -0.01*1e-3 + 0.02*1e-3 * randn(1); -0.01*1e-3 + 0.02*1e-3 * randn(1); -0.01*1e-3 + 0.02*1e-3 * randn(1)] ;
+ic = [randn(1); randn(1); randn(1);
+      randn(1)*1e-3; randn(1)*1e-3; randn(1)*1e-3] ;
 
 %% State space model + Kalman Filter
 n = param.n ;
@@ -45,7 +45,7 @@ sys_d           =   c2d(system,Ts,'zoh');
 [Ad,Bd,Cd,Dd]   =   ssdata(sys_d);
 
 %% Open loop simulation for the nominal system
-Nsim            =   60 ;
+Nsim            =   80 ;
 t               =   0:Ts:Nsim*Ts;
 x0              =   ic ;
 u0              =   [1e-3*sin(t); -1e-3*sin(t); 5e-4*sin(t)] ;
@@ -166,7 +166,7 @@ figure(4),subplot(2,1,2),plot3(x_ref(4,:),x_ref(5,:),x_ref(6,:)),grid on,title('
 
 %% LQR Control Problem
 Q           =   1 ;
-R           =   100 ;
+R           =   10000 ;
 
 K           =   lqr(sys_d,Q,R);
 
@@ -302,13 +302,13 @@ F = findall(0,'type','figure','tag','TMWWaitbar');
 delete(f)
 
 %% Comparison between LQR and MPC trajectories
-figure(8),subplot(3,1,1),plot(tsim,xHatsim(1,:),'b'),grid on, hold on, title('x [km]')
-figure(8),subplot(3,1,2),plot(tsim,xHatsim(2,:),'b'),grid on, hold on, title('y [km]')
-figure(8),subplot(3,1,3),plot(tsim,xHatsim(3,:),'b'),grid on, hold on, title('z [km]')
+figure(8),subplot(3,1,1),plot(tsim,xHatsim(1,:),'k'),grid on, hold on, title('x [km]')
+figure(8),subplot(3,1,2),plot(tsim,xHatsim(2,:),'k'),grid on, hold on, title('y [km]')
+figure(8),subplot(3,1,3),plot(tsim,xHatsim(3,:),'k'),grid on, hold on, title('z [km]')
 
-figure(8),subplot(3,1,1),plot(tsim,xHatmpc(1,:),'k'),grid on, hold on, title('x [km]')
-figure(8),subplot(3,1,2),plot(tsim,xHatmpc(2,:),'k'),grid on, hold on, title('y [km]')
-figure(8),subplot(3,1,3),plot(tsim,xHatmpc(3,:),'k'),grid on, hold on, title('z [km]')
+figure(8),subplot(3,1,1),plot(tsim,xHatmpc(1,:),'b'),grid on, hold on, title('x [km]')
+figure(8),subplot(3,1,2),plot(tsim,xHatmpc(2,:),'b'),grid on, hold on, title('y [km]')
+figure(8),subplot(3,1,3),plot(tsim,xHatmpc(3,:),'b'),grid on, hold on, title('z [km]')
 
 figure(8),subplot(3,1,1),plot(x_ref(1,1:end-N_MPC),'r--'),grid on, hold on, title('x [km]')
 figure(8),subplot(3,1,2),plot(x_ref(2,1:end-N_MPC),'r--'),grid on, hold on, title('y [km]')
@@ -324,16 +324,16 @@ figure(7),subplot(2,1,2),plot(tsim,uMPC(:,3)),grid on, hold on
 legend('LQR', 'MPC')
 
 %% Resulting trajectory with MPC
-figure(9), plot3(xHatmpc(1,30:end), xHatmpc(2,30:end), xHatmpc(3,30:end), 'b', 'LineWidth', 1.5), grid on, hold on
-plot3(x_ref(1,30:end-N_MPC),x_ref(2,30:end-N_MPC),x_ref(3,30:end-N_MPC),'r--'),grid on
+figure(9), plot3(xHatmpc(1,40:end), xHatmpc(2,40:end), xHatmpc(3,40:end), 'b', 'LineWidth', 1.5), grid on, hold on
+plot3(x_ref(1,40:end-N_MPC),x_ref(2,40:end-N_MPC),x_ref(3,40:end-N_MPC),'r--'),grid on
 scatter3(0, 0, 0, 'k', 'filled')
 title('MPC fly-around trajectory'), xlabel('x [km]'), ylabel('y [km]'), zlabel('z [km]')
 legend('MPC Trajectory', 'Reference Trajectory', 'Target')
 axis equal
 
 %% Resulting trajectory with LQR
-figure(10), plot3(xHatsim(1,30:end), xHatsim(2,30:end), xHatsim(3,30:end), 'k', 'LineWidth', 1.5), grid on, hold on
-plot3(x_ref(1,30:end-N_MPC),x_ref(2,30:end-N_MPC),x_ref(3,30:end-N_MPC),'r--'),grid on
+figure(10), plot3(xHatsim(1,40:end), xHatsim(2,40:end), xHatsim(3,40:end), 'k', 'LineWidth', 1.5), grid on, hold on
+plot3(x_ref(1,40:end-N_MPC),x_ref(2,40:end-N_MPC),x_ref(3,40:end-N_MPC),'r--'),grid on
 scatter3(0, 0, 0, 'k', 'filled')
 title('LQR fly-around trajectory'), xlabel('x [km]'), ylabel('y [km]'), zlabel('z [km]')
 legend('LQR Trajectory', 'Reference Trajectory', 'Target')

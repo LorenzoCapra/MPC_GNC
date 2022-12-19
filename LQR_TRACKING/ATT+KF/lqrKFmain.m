@@ -26,7 +26,7 @@ Ts = 1 ; % [s]
 param.Ts = Ts;
 
 % Initial conditions:
-o0          =   deg2rad([0; 0; 0]);
+o0          =   deg2rad([randn(1); randn(1); randn(1)]);
 w_chaser    =   [randn(1); randn(1); randn(1)]*1e-3;
 
 ic          =   [w_chaser;o0] ;
@@ -53,10 +53,10 @@ C = eye(6);
 
 D = 0;
      
-Q = .01*eye(6);
-R = [3e3/(J(1, 1)^2), 0, 0;
-     0, 3e3/(J(2, 2)^2), 0;
-     0, 0, 3e3/(J(3, 3)^2)];
+Q = .1*eye(6); 
+R = [1e4/(J(1, 1)^2), 0, 0;
+     0, 1e4/(J(2, 2)^2), 0;
+     0, 0, 1e4/(J(3, 3)^2)];
 
 system          =   ss(A,Bu,C,D);
 
@@ -174,7 +174,7 @@ for ind_sim=2:Nsim
 %     u(u>uMax)           =   uMax;
 %     u(u<uMin)           =   uMin;
 
-%     d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
+    d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
 
     % Integrate nominal dynamics
     xout    = linearAdcsModel(xsim(:, ind_sim-1),u,d,param) ;
@@ -221,6 +221,8 @@ figure(6),subplot(3,1,3),plot(tsim,xHatsim(6,:)),grid on, hold on, title('z [deg
 figure(6),subplot(3,1,1),plot(tsim,x_ref(4,1:end-N_MPC),'r--'),grid on, hold on
 figure(6),subplot(3,1,2),plot(tsim,x_ref(5,1:end-N_MPC),'r--'),grid on, hold on
 figure(6),subplot(3,1,3),plot(tsim,x_ref(6,1:end-N_MPC),'r--'),grid on, hold on
+
+legend('Sensor','KF','Ref')
 
 % close all
 
@@ -272,7 +274,7 @@ for ind_sim=2:Nsim
                             [],[],[],[],[],[],@(u)linearadc_constr_fun(xHatmpc(:,ind_sim-1),u,d,N,umax,param),options);
     u                   =   ustar(1,:)';
 
-%     d                   =   [normrnd(0, 1e-2); normrnd(0, 1e-2); normrnd(0, 1e-2)] ;
+    d                   =   [normrnd(0, 1e-3); normrnd(0, 1e-3); normrnd(0, 1e-3)] ;
 
     % Integrate nominal dynamics
     xout    = linearAdcsModel(xMPC(:, ind_sim-1),u,d,param) ;
@@ -323,13 +325,12 @@ figure(11),subplot(3,1,1),plot(tsim,x_ref(4,1:end-N_MPC),'r--'),grid on, hold on
 figure(11),subplot(3,1,2),plot(tsim,x_ref(5,1:end-N_MPC),'r--'),grid on, hold on, title('o2')
 figure(11),subplot(3,1,3),plot(tsim,x_ref(6,1:end-N_MPC),'r--'),grid on, hold on, title('o3')
 
-
 legend('MPC','LQR','REF')
 
 %% Comparison between FHOCP and MPC control effort
-figure(6),subplot(2,1,2),plot(tsim,uMPC(:,1)),grid on, hold on, title('Input acceleration [km/s^2] with LQR vs MPC')
-figure(6),subplot(2,1,2),plot(tsim,uMPC(:,2)),grid on, hold on
-figure(6),subplot(2,1,2),plot(tsim,uMPC(:,3)),grid on, hold on
+figure(7),subplot(2,1,2),plot(tsim,uMPC(:,1)),grid on, hold on, title('Input acceleration [km/s^2] with LQR vs MPC')
+figure(7),subplot(2,1,2),plot(tsim,uMPC(:,2)),grid on, hold on
+figure(7),subplot(2,1,2),plot(tsim,uMPC(:,3)),grid on, hold on
 
 legend('LQR', 'MPC')
 
@@ -342,21 +343,21 @@ error_xLqr = xHatsim(1,:) - x_ref(1,1:end-N_MPC);
 error_yLqr = xHatsim(2,:) - x_ref(2,1:end-N_MPC);
 error_zLqr = xHatsim(3,:) - x_ref(3,1:end-N_MPC);
 
-figure(11),subplot(3,1,1),plot(tsim,error_xMpc,'b','LineWidth', 1),grid on,hold on
+figure(12),subplot(3,1,1),plot(tsim,error_xMpc,'b','LineWidth', 1),grid on,hold on
 subplot(3,1,2),plot(tsim,error_yMpc,'r','LineWidth', 1),grid on,hold on
 subplot(3,1,3),plot(tsim,error_zMpc,'g','LineWidth', 1),grid on,hold on
-figure(11),subplot(3,1,1),plot(tsim,error_xLqr,'b--','LineWidth', 1),grid on
+figure(12),subplot(3,1,1),plot(tsim,error_xLqr,'b--','LineWidth', 1),grid on
 subplot(3,1,2),plot(tsim,error_yLqr,'r--','LineWidth', 1),grid on
 subplot(3,1,3),plot(tsim,error_zLqr,'g--','LineWidth', 1),grid on
 
 errorMpc = [error_xMpc', error_yMpc', error_zMpc'];
 errorLqr = [error_xLqr', error_yLqr', error_zLqr'];
-norm_err = zeros(N,2);
+norm_err = zeros(N-N_MPC,2);
 
-for i = 1:N
+for i = 1:N-N_MPC
     norm_err(i,1) = norm(errorMpc(i,:));
     norm_err(i,2) = norm(errorLqr(i,:));
 end
 
-figure(12),plot(tsim,norm_err(:,1),'r','LineWidth', 1.5),grid on,hold on,title('Norm of the position error')
+figure(13),plot(tsim,norm_err(:,1),'r','LineWidth', 1.5),grid on,hold on,title('Norm of the Angle error')
 plot(tsim,norm_err(:,2),'b','LineWidth', 1.5),grid on
